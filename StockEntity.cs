@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace StockCheckerII
 {
-    internal class StockEntity
+    public class StockEntity
     {
         List<YearDataSet> _yearData = new List<YearDataSet>();
 
