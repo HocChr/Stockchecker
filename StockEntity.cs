@@ -5,6 +5,14 @@ namespace StockCheckerII
     public class StockEntity
     {
         List<YearDataSet> _yearData = new List<YearDataSet>();
+        string _name;
+
+        string _remarks = "";
+
+        public StockEntity(string name)
+        {
+            _name = name;
+        }
 
         public enum Rate
         {
@@ -21,24 +29,44 @@ namespace StockCheckerII
         }
 
         public Rate Rating { get; set; }
-        public string Name { get; set; }
-        public double EarningCorrelation { get; set; }
-        public double EarningGrowthTreeYears { get; set; }
-        public double EarningGrowthLastYear{ get; set; }
-        public double PayoutRatio{ get; set; }
-        internal List<YearDataSet> YearData
+        public string Name
         {
             get
             {
-                _yearData.Sort((x, y) => x.Year.CompareTo(y.Year));
-                return _yearData;
+                // Return the actual name if it is not null.
+                return this._name ?? string.Empty;
             }
-
             set
             {
-                _yearData = value;
-                _yearData.Sort((x, y) => x.Year.CompareTo(y.Year));
+                // Set the employee name field.
+                this._name = value;
             }
         }
+
+        public int Score{ get; set; }
+        public double EarningCorrelation { get; set; }
+        public double EarningGrowthTreeYears { get; set; }
+        public double EarningGrowthLastYear { get; set; }
+        public int NumYearsDividendNotReduced { get; set; }
+        public double DividendGrowthFiveYears { get; set; }
+        public double DividendGrowthOneYear { get; set; }
+        public double PayoutRatio { get; set; }
+
+        public List<YearDataSet> GetYearData()
+        {
+            _yearData.Sort((x, y) => x.Year.CompareTo(y.Year));
+            return _yearData;
+        }
+        public void SetYearData(List<YearDataSet> value)
+        {
+            _yearData = value;
+            _yearData.Sort((x, y) => x.Year.CompareTo(y.Year));
+        }
+        public void AddRemark(string remark)
+        {
+            _remarks += remark + "; ";
+        }
+
+        public string GetRemarks() => _remarks;
     }
 }

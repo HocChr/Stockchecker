@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+
 
 namespace StockCheckerII
 {
@@ -20,9 +23,8 @@ namespace StockCheckerII
             Evaluator evaluator = new Evaluator();
             evaluator.CalculateAndEvaluate(stocks);
 
+            stocks = stocks.OrderByDescending(x => x.Score).ThenByDescending(x => x.DividendGrowthFiveYears).ToList();
             _gui.SetStocks(stocks);
-
-            Console.WriteLine("Hello Test!");
 
             return true;
         }
