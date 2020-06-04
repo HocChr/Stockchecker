@@ -9,6 +9,8 @@ namespace StockCheckerII
 
         string _remarks = "";
 
+        Rate _rating = Rate.VERKAUFEN;
+
         public StockEntity(string name)
         {
             _name = name;
@@ -16,19 +18,30 @@ namespace StockCheckerII
 
         public enum Rate
         {
-            A,
-            B,
-            C
+            KAUFEN,
+            HALTEN,
+            VERKAUFEN
         }
 
         public class YearDataSet
         {
+            public YearDataSet() { }
+            public YearDataSet(YearDataSet other)
+            {
+                Dividend = other.Dividend;
+                Earning = other.Earning;
+                Year = other.Year;
+            }
             public double Dividend { get; set; }
             public double Earning { get; set; }
             public int Year { get; set; }
         }
 
-        public Rate Rating { get; set; }
+        public Rate Rating
+        {
+            get { return _rating; }
+            set { _rating = value; }
+        }
         public string Name
         {
             get
@@ -43,13 +56,14 @@ namespace StockCheckerII
             }
         }
 
-        public int Score{ get; set; }
+        public int Score { get; set; }
         public double EarningCorrelation { get; set; }
         public double EarningGrowthTreeYears { get; set; }
         public double EarningGrowthLastYear { get; set; }
         public int NumYearsDividendNotReduced { get; set; }
         public double DividendGrowthFiveYears { get; set; }
         public double DividendGrowthOneYear { get; set; }
+        public bool DividendPaidThisYear { get; set; }
         public double PayoutRatio { get; set; }
 
         public List<YearDataSet> GetYearData()

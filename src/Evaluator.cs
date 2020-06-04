@@ -7,23 +7,115 @@ namespace StockCheckerII
     {
         public void CalculateAndEvaluate(List<StockEntity> stocks)
         {
+            CalculateAndEvaluateThreeTimes(stocks);
+        }
+
+        private void CalculateAndEvaluateThreeTimes(List<StockEntity> stocks)
+        {
+            // Um das Rating über die letzten 3 Jahre gemittelt zu errechnen, muss für das aktuelle Jahr,
+            // das Jahr davor und das Vor-Vor-Jahr die Berechnung und Bewertung durchgeführt werden.
+
             foreach (StockEntity stock in stocks)
             {
+                if (stock.GetYearData().Count < 8)
+                {
+                    stock.AddRemark("Keine Auswertung aufgrund zu weniger Daten");
+                    continue;
+                }
+
+                // berechne und evaluiere das vorletzte Jahr
+                bool result = CalculateAndEvaluateYearBeforeLastYear(stock);
+                if (!result)
+                {
+                    continue;
+                }
+                int scoreSum = stock.Score;
+
+                // berechne und evaluiere das vorige Jahr
+                result = CalculateAndEvaluateLastYear(stock);
+                if (!result)
+                {
+                    continue;
+                }
+                scoreSum += stock.Score;
+
+                // berechne und evaluiere das aktuelle Jahr
                 if (!Calculate(stock)) continue;
                 Evaluate(stock);
+
+                // Führe zuletzt die Berechnung des durchschnittl. ratings aus
+                stock.Score += scoreSum;
+                doRating(stock);
             }
+        }
+
+        private void doRating(StockEntity stock)
+        {
+            if (stock.Score >= 14)
+            {
+                stock.Rating = StockEntity.Rate.KAUFEN;
+                return;
+            }
+            if (stock.Score >= 6)
+            {
+                stock.Rating = StockEntity.Rate.HALTEN;
+                return;
+            }
+            stock.Rating = StockEntity.Rate.VERKAUFEN;
+        }
+
+        private bool CalculateAndEvaluateLastYear(StockEntity stock)
+        {
+            // Entferne das letzte Jahr, aber speichere es vorher,
+            // um es zum Schluss wieder zurück zu setzen
+            StockEntity.YearDataSet dataSetLastYear =
+             new StockEntity.YearDataSet(stock.GetYearData()[stock.GetYearData().Count - 1]);
+            stock.GetYearData().RemoveAt(stock.GetYearData().Count - 1);
+
+            bool result = Calculate(stock);
+            if (result)
+            {
+                Evaluate(stock);
+            }
+
+            stock.GetYearData().Add(dataSetLastYear);
+
+            return result;
+        }
+
+        private bool CalculateAndEvaluateYearBeforeLastYear(StockEntity stock)
+        {
+            // Entferne das letzte als auch das vorletzte Jahr, aber speichere sie vorher,
+            // um sie zum Schluss wieder zurück zu setzen
+            StockEntity.YearDataSet dataSetLastYear =
+             new StockEntity.YearDataSet(stock.GetYearData()[stock.GetYearData().Count - 1]);
+            stock.GetYearData().RemoveAt(stock.GetYearData().Count - 1);
+
+            StockEntity.YearDataSet dataSetLastLastYear =
+             new StockEntity.YearDataSet(stock.GetYearData()[stock.GetYearData().Count - 1]);
+            stock.GetYearData().RemoveAt(stock.GetYearData().Count - 1);
+
+            bool result = Calculate(stock);
+            if (result)
+            {
+                Evaluate(stock);
+            }
+
+            stock.GetYearData().Add(dataSetLastYear);
+            stock.GetYearData().Add(dataSetLastLastYear);
+
+            return result;
         }
 
         private void Evaluate(StockEntity stock)
         {
             int score = 0;
 
-            if(stock.EarningGrowthTreeYears > 1.0e-6) score++;
-            if(stock.EarningGrowthLastYear > 1.0e-6) score++;
-            if(stock.EarningCorrelation >= 0.7) score++;
-            if(stock.DividendGrowthOneYear > 1.0e-6) score++;
-            if(stock.NumYearsDividendNotReduced >= 10 ||
-             stock.NumYearsDividendNotReduced == stock.GetYearData().Count) score++;
+            if (stock.EarningGrowthLastYear > 1.0e-6) score++;
+            if (stock.EarningCorrelation >= 0.7) score++;
+            if (stock.DividendGrowthOneYear > 1.0e-6) score++;
+            if (stock.DividendPaidThisYear) score++;
+            if (stock.PayoutRatio <= 75) score++;
 
             stock.Score = score;
         }
@@ -32,7 +124,6 @@ namespace StockCheckerII
 
         private bool Calculate(StockEntity stock)
         {
-            if (!CheckBeforeCalculation(stock)) return false;
             if (!SetEarningCorrelationFactor(stock)) return false;
             if (!SetEarningAndDividendGrowth(stock)) return false;
             if (!SetPayoutRatio(stock)) return false;
@@ -77,7 +168,7 @@ namespace StockCheckerII
 
         private bool SetEarningAndDividendGrowth(StockEntity stock)
         {
-            if (stock.GetYearData().Count < 5) return false;
+            if (stock.GetYearData().Count < 6) return false;
 
             // calculate three years earnings growth
             var x0 = stock.GetYearData()[stock.GetYearData().Count - 4].Earning;
@@ -89,6 +180,9 @@ namespace StockCheckerII
             x1 = stock.GetYearData()[stock.GetYearData().Count - 1].Earning;
             stock.EarningGrowthLastYear = CompoundAnnualGrowthRate(x1, x0, 1);
 
+            // calculate dividend paid in this year
+            stock.DividendPaidThisYear = stock.GetYearData()[stock.GetYearData().Count - 1].Dividend > 1.0e-6;
+
             // calculate five years dividend growth
             x0 = stock.GetYearData()[stock.GetYearData().Count - 6].Dividend;
             x1 = stock.GetYearData()[stock.GetYearData().Count - 1].Dividend;
@@ -98,18 +192,6 @@ namespace StockCheckerII
             x0 = stock.GetYearData()[stock.GetYearData().Count - 2].Dividend;
             x1 = stock.GetYearData()[stock.GetYearData().Count - 1].Dividend;
             stock.DividendGrowthOneYear = CompoundAnnualGrowthRate(x1, x0, 1);
-
-            return true;
-        }
-
-        // returns true is Data is valid. adds Remark otherwise.
-        private bool CheckBeforeCalculation(StockEntity stock)
-        {
-            if (stock.GetYearData().Count < 8)
-            {
-                stock.AddRemark("Keine Auswertung aufgrund zu weniger Daten");
-                return false;
-            }
 
             return true;
         }
