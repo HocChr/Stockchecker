@@ -115,7 +115,7 @@ namespace StockCheckerII
             if (stock.EarningCorrelation >= 0.7) score++;
             if (stock.DividendGrowthOneYear > 1.0e-6) score++;
             if (stock.NumYearsDividendNotReduced >= 5) score++;
-            if (stock.PayoutRatio <= 66) score++;
+            if (stock.PayoutRatio <= 75) score++;
 
             stock.Score = score;
         }
