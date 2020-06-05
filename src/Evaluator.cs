@@ -51,17 +51,17 @@ namespace StockCheckerII
 
         private void doRating(StockEntity stock)
         {
-            if (stock.Score >= 14)
+            if (stock.Score > 12)
             {
-                stock.Rating = StockEntity.Rate.KAUFEN;
+                stock.Rating = StockEntity.Rate.A;
                 return;
             }
-            if (stock.Score >= 6)
+            if (stock.Score > 9)
             {
-                stock.Rating = StockEntity.Rate.HALTEN;
+                stock.Rating = StockEntity.Rate.B;
                 return;
             }
-            stock.Rating = StockEntity.Rate.VERKAUFEN;
+            stock.Rating = StockEntity.Rate.C;
         }
 
         private bool CalculateAndEvaluateLastYear(StockEntity stock)
@@ -114,8 +114,8 @@ namespace StockCheckerII
             if (stock.EarningGrowthLastYear > 1.0e-6) score++;
             if (stock.EarningCorrelation >= 0.7) score++;
             if (stock.DividendGrowthOneYear > 1.0e-6) score++;
-            if (stock.DividendPaidThisYear) score++;
-            if (stock.PayoutRatio <= 75) score++;
+            if (stock.NumYearsDividendNotReduced >= 5) score++;
+            if (stock.PayoutRatio <= 66) score++;
 
             stock.Score = score;
         }
@@ -179,9 +179,6 @@ namespace StockCheckerII
             x0 = stock.GetYearData()[stock.GetYearData().Count - 2].Earning;
             x1 = stock.GetYearData()[stock.GetYearData().Count - 1].Earning;
             stock.EarningGrowthLastYear = CompoundAnnualGrowthRate(x1, x0, 1);
-
-            // calculate dividend paid in this year
-            stock.DividendPaidThisYear = stock.GetYearData()[stock.GetYearData().Count - 1].Dividend > 1.0e-6;
 
             // calculate five years dividend growth
             x0 = stock.GetYearData()[stock.GetYearData().Count - 6].Dividend;
