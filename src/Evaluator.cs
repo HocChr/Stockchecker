@@ -56,7 +56,7 @@ namespace StockCheckerII
                 stock.Rating = StockEntity.Rate.A;
                 return;
             }
-            if (stock.Score > 9)
+            else if (stock.Score > 9)
             {
                 stock.Rating = StockEntity.Rate.B;
                 return;

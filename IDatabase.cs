@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-public interface IDatabase
+internal interface IDatabase
 {
     List<StockCheckerII.StockEntity> GetStocks();
 }
