@@ -17,12 +17,12 @@ namespace StockCheckerII
 
         private void doRating(StockEntity stock)
         {
-            if (stock.Percentage >= 80.0)
+            if (stock.Percentage > 80.0)
             {
                 stock.Rating = StockEntity.Rate.A;
                 return;
             }
-            else if (stock.Percentage >= 50.0)
+            else if (stock.Percentage > 45.0)
             {
                 stock.Rating = StockEntity.Rate.B;
                 return;
@@ -40,12 +40,12 @@ namespace StockCheckerII
             percentage += PercentageOfDividendYearsNotCutted(stock);
             percentage += PercentageOfPayoutRatio(stock);
 
-            stock.Percentage = Math.Round(100.0 * percentage / 5.0, 1);
+            stock.Percentage = Math.Round(100.0 * percentage / 5.0, 2);
         }
 
         private double PercentageOfEarningCorrelation(StockEntity stock)
         {
-            double minimalCorrelation = 0.0;
+            double minimalCorrelation = 0.5;
             double maximalCorrelation = 1.0;
 
             return CalcPercentage(minimalCorrelation, maximalCorrelation, stock.EarningCorrelation);
@@ -78,11 +78,13 @@ namespace StockCheckerII
 
         private double PercentageOfPayoutRatio(StockEntity stock)
         {
-            var percentage0 = CalcPercentage(0.0, 50.0, stock.PayoutRatio);
-            var percentage1 = 1.0 - CalcPercentage(50.0, 100.0, stock.PayoutRatio);
+            double idealPayoutRatio = 50.0;
+            double payoutSqrt = idealPayoutRatio * idealPayoutRatio;
 
-            var best = Math.Min(percentage0, percentage1);
-            return best;
+            double actualPayoutRatio = Math.Min(stock.PayoutRatio, 100.0);
+            actualPayoutRatio = Math.Max(actualPayoutRatio, 0.0);
+
+            return Math.Sqrt(payoutSqrt - Math.Pow(actualPayoutRatio - idealPayoutRatio, 2)) / idealPayoutRatio;
         }
 
         private double CalcPercentage(double minExpected, double maxExpected, double actualValue)
@@ -101,9 +103,9 @@ namespace StockCheckerII
             }
             else
             {
-                double m = 1.0 / (maxExpected - minExpected);
-                var debug = m * actualValue - m * minExpected;
-                return m * actualValue - m * minExpected;
+                var distance = Math.Sqrt(Math.Pow(maxExpected - minExpected, 2) - Math.Pow(maxExpected - actualValue, 2));
+                distance /= (maxExpected - minExpected);
+                return distance;
             }
         }
 
@@ -123,9 +125,9 @@ namespace StockCheckerII
         private void SetNumYearsDividendNotReduced(StockEntity stock)
         {
             int numYears = 0;
-            for (int i = 1; i < stock.GetYearData().Count; i++)
+            for (int i = stock.GetYearData().Count; i > 1; i--)
             {
-                if (stock.GetYearData()[i - 1].Dividend <= stock.GetYearData()[i].Dividend)
+                if (stock.GetYearData()[i - 1].Dividend >= stock.GetYearData()[i - 2].Dividend)
                 {
                     numYears++;
                 }

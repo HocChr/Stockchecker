@@ -17,7 +17,7 @@ namespace StockCheckerII
 
             Evaluator evaluator = new Evaluator();
             evaluator.CalculateAndEvaluate(stocks);
-            stocks = stocks.OrderByDescending(x => x.Score).ThenByDescending(x => x.DividendGrowthFiveYears).ToList();
+            stocks = stocks.OrderByDescending(x => x.Percentage).ThenByDescending(x => x.DividendGrowthThreeYears).ToList();
 
             return stocks;
         }

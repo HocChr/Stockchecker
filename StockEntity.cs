@@ -56,13 +56,13 @@ namespace StockCheckerII
             }
         }
 
-        public int Score { get; set; }
+        public double Percentage { get; set; }
         public double EarningCorrelation { get; set; }
         public double EarningGrowthTreeYears { get; set; }
-        public double EarningGrowthLastYear { get; set; }
+        //public double EarningGrowthLastYear { get; set; }
         public int NumYearsDividendNotReduced { get; set; }
-        public double DividendGrowthFiveYears { get; set; }
-        public double DividendGrowthOneYear { get; set; }
+        public double DividendGrowthThreeYears { get; set; }
+        //public double DividendGrowthOneYear { get; set; }
         public double PayoutRatio { get; set; }
 
         public List<YearDataSet> GetYearData()
